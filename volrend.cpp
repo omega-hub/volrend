@@ -26,6 +26,11 @@ public:
         scale(9.0f)
     {
         FreeImage_Initialise();
+        node = SceneNode::create("volumeNode");
+
+        setSliceBoundX(0, 1);
+        setSliceBoundY(0, 1);
+        setSliceBoundZ(0, 1);
     }
 
     virtual void initializeRenderer(Renderer* r);
@@ -150,6 +155,24 @@ public:
         //rasterUpdated = false;
     }
 
+    void setSliceBoundX(float bmin, float bmax)
+    {
+        sliceBoundX[0] = bmin;
+        sliceBoundX[1] = bmax;
+    } 
+
+    void setSliceBoundY(float bmin, float bmax)
+    {
+        sliceBoundY[0] = bmin;
+        sliceBoundY[1] = bmax;
+    } 
+
+    void setSliceBoundZ(float bmin, float bmax)
+    {
+        sliceBoundZ[0] = bmin;
+        sliceBoundZ[1] = bmax;
+    } 
+
     // Data physical size
     float sizeX;
     float sizeY;
@@ -163,6 +186,14 @@ public:
     uint16_t bps;
     int dircount;
     bool rasterUpdated;
+
+    // Volume Transform node
+    SceneNode* node;
+    
+    // Slice bounds
+    Vector2f sliceBoundX;
+    Vector2f sliceBoundY;
+    Vector2f sliceBoundZ;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -333,8 +364,18 @@ public:
             glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_CURRENT_BIT);
             glEnable(GL_TEXTURE_1D);
             client->getRenderer()->beginDraw3D(context);
+
+            glMatrixMode(GL_MODELVIEW);
+            glMultMatrixd(module->node->getFullTransform().data());
+
             glUseProgram(volRendShaderProg);
+
+            glUniform2f(xSliceBoundsLoc, module->sliceBoundX[0], module->sliceBoundX[1]);
+            glUniform2f(ySliceBoundsLoc, module->sliceBoundY[0], module->sliceBoundY[1]);
+            glUniform2f(zSliceBoundsLoc, module->sliceBoundZ[0], module->sliceBoundZ[1]);
+
             volBlock.draw();
+
             glUseProgram(0);
             client->getRenderer()->endDraw();
             glPopAttrib();
@@ -383,6 +424,10 @@ BOOST_PYTHON_MODULE(volrend)
     // OmegaViewer
     PYAPI_REF_BASE_CLASS(VolumeRenderModule)
         PYAPI_METHOD(VolumeRenderModule, loadTiff)
+        PYAPI_METHOD(VolumeRenderModule, setSliceBoundX)
+        PYAPI_METHOD(VolumeRenderModule, setSliceBoundY)
+        PYAPI_METHOD(VolumeRenderModule, setSliceBoundZ)
+        .add_property("node", make_getter(&VolumeRenderModule::node, return_value_policy<reference_existing_object>()), make_setter(&VolumeRenderModule::node, PYAPI_RETURN_VALUE))
         ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

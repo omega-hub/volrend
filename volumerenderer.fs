@@ -42,14 +42,13 @@ void main()
   	 rayPos.y <= 1.0 && rayPos.y >= 0.0 &&
   	 rayPos.z <= 1.0 && rayPos.z >= 0.0 && rayColor.a < .97)
     {
-      /*
       if ((rayPos.x > xSliceBounds.y) || (rayPos.x < xSliceBounds.x)
 	  || (rayPos.y > ySliceBounds.y) || (rayPos.y < ySliceBounds.x)
 	  || (rayPos.z > zSliceBounds.y) || (rayPos.z < zSliceBounds.x)) {
 	rayPos += rayStep;
 	continue;
       }
-      */
+      
 
       float scalar = texture3D(volumeTex, rayPos).a;
       float alpha = texture1D(amapTex, scalar).a;
